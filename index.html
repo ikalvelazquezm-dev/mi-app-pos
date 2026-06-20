@@ -45,6 +45,10 @@
         .badge-success { background: #26de81; }
         .badge-warning { background: #ffa502; }
         .badge-danger { background: #ff6b6b; }
+        .total-box { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
+        .total-box h2 { font-size: 36px; }
+        .progress-bar { background: #e0e0e0; border-radius: 10px; height: 8px; margin: 8px 0; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 10px; height: 100%; transition: width 0.5s; }
     </style>
 </head>
 <body>
@@ -55,26 +59,22 @@
     </div>
 
     <div class="container" style="max-width: 800px; margin: 0 auto;">
-        <!-- TABS -->
         <div class="tabs">
             <button class="tab active" onclick="cambiarTab('productos')">📦 Productos</button>
             <button class="tab" onclick="cambiarTab('pedidos')">🛒 Pedidos</button>
             <button class="tab" onclick="cambiarTab('ventas')">💰 Ventas</button>
         </div>
 
-        <!-- PRODUCTOS -->
         <div id="tab-productos" class="section active">
             <div id="lista-productos"></div>
             <button class="btn btn-primary" onclick="abrirModalProducto()" style="width:100%;">➕ Agregar Producto</button>
         </div>
 
-        <!-- PEDIDOS -->
         <div id="tab-pedidos" class="section">
             <div id="lista-pedidos"></div>
             <button class="btn btn-primary" onclick="abrirModalPedido()" style="width:100%;">🛒 Nuevo Pedido</button>
         </div>
 
-        <!-- VENTAS -->
         <div id="tab-ventas" class="section">
             <div id="lista-ventas"></div>
         </div>
@@ -230,7 +230,7 @@
             actualizarSelect();
         }
 
-        // ============ PEDIDOS (SIN RESTRICCIONES DE STOCK) ============
+        // ============ PEDIDOS - SIN NINGUNA RESTRICCION DE STOCK ============
         function abrirModalPedido() {
             carrito = [];
             document.getElementById('modal-pedido').classList.add('show');
@@ -248,17 +248,20 @@
             });
         }
 
+        // ✅ AGREGAR AL CARRITO - SIN VERIFICAR STOCK
         function agregarCarrito() {
             const id = parseInt(document.getElementById('select-producto').value);
             const cantidad = parseInt(document.getElementById('cantidad').value);
+            
             if (!id || isNaN(cantidad) || cantidad < 1) { 
                 alert('Selecciona un producto y una cantidad válida'); 
                 return; 
             }
+            
             const producto = productos.find(p => p.id === id);
             if (!producto) return;
 
-            // ✅ PERMITE AGREGAR AUNQUE NO HAYA STOCK
+            // ✅ AGREGAR SIN IMPORTAR EL STOCK
             const existente = carrito.find(i => i.productoId === id);
             if (existente) {
                 existente.cantidad += cantidad;
@@ -276,9 +279,9 @@
             document.getElementById('cantidad').value = 1;
             mostrarCarrito();
             
-            // ⚠️ SOLO MUESTRA ADVERTENCIA, PERO PERMITE AGREGAR
+            // ⚠️ SOLO ADVERTENCIA, NO BLOQUEA
             if (producto.stock < cantidad) {
-                alert('⚠️ ADVERTENCIA: Stock insuficiente. Solo hay ' + producto.stock + ' unidades disponibles.');
+                alert('⚠️ ADVERTENCIA: Stock insuficiente. Solo hay ' + producto.stock + ' unidades disponibles, pero igual se agregó al carrito.');
             }
         }
 
@@ -319,6 +322,7 @@
             mostrarCarrito(); 
         }
 
+        // ✅ CREAR PEDIDO - SIEMPRE PERMITE
         function crearPedido() {
             const cliente = document.getElementById('cliente').value.trim();
             if (!cliente) { 
@@ -330,32 +334,11 @@
                 return; 
             }
 
-            // Verificar productos sin stock
-            let sinStock = [];
-            carrito.forEach(item => {
-                const prod = productos.find(p => p.id === item.productoId);
-                if (prod && prod.stock < item.cantidad) {
-                    sinStock.push(`• ${item.nombre}: ${prod.stock} disponibles (pides ${item.cantidad})`);
-                }
-            });
-
-            // ✅ PERMITE CREAR EL PEDIDO SIEMPRE
-            let mensaje = '📋 ¿Crear este pedido?\n\n';
-            mensaje += `Cliente: ${cliente}\n`;
-            mensaje += `Total: $${carrito.reduce((s, i) => s + i.precio * i.cantidad, 0).toFixed(2)}\n`;
-            
-            if (sinStock.length > 0) {
-                mensaje += '\n⚠️ STOCK INSUFICIENTE para:\n' + sinStock.join('\n');
-                mensaje += '\n\n¿Deseas crear el pedido de todas formas?';
-            } else {
-                mensaje += '\n✅ Todos los productos tienen stock suficiente.';
-            }
-
-            if (!confirm(mensaje)) return;
-
-            // Crear el pedido
+            // Calcular total
             let total = 0;
             carrito.forEach(i => total += i.precio * i.cantidad);
+
+            // ✅ CREAR PEDIDO SIN NINGUNA VERIFICACION DE STOCK
             pedidos.push({
                 id: Date.now(),
                 cliente: cliente,
@@ -368,7 +351,10 @@
             });
             localStorage.setItem('pedidos', JSON.stringify(pedidos));
             
-            alert('✅ Pedido creado exitosamente!\n' + (sinStock.length > 0 ? '\n⚠️ Recuerda reponer stock para completar la entrega.' : ''));
+            alert('✅ Pedido creado exitosamente!\n\n' + 
+                  'Cliente: ' + cliente + '\n' +
+                  'Total: $' + total.toFixed(2) + '\n' +
+                  'Productos: ' + carrito.length);
             
             cerrarModal('modal-pedido');
             carrito = [];
@@ -393,13 +379,6 @@
                 const total = p.items.reduce((s, i) => s + i.cantidad, 0);
                 const prog = total > 0 ? Math.round((entregado/total)*100) : 0;
                 
-                // Verificar stock
-                let sinStock = false;
-                p.items.forEach(i => {
-                    const prod = productos.find(pr => pr.id === i.productoId);
-                    if (prod && prod.stock < (i.cantidad - i.entregado)) sinStock = true;
-                });
-                
                 html += `<div class="card">
                     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
                         <div>
@@ -410,27 +389,23 @@
                         <span class="status status-${p.estado}">${p.estado}</span>
                     </div>
                     
-                    ${sinStock ? `<div class="stock-warning">⚠️ Algunos productos tienen stock insuficiente para completar la entrega.</div>` : ''}
-                    
-                    <div style="background:#e0e0e0;border-radius:10px;height:8px;margin:8px 0;overflow:hidden;">
-                        <div style="background:linear-gradient(90deg,#667eea,#764ba2);border-radius:10px;height:100%;width:${prog}%;transition:width 0.5s;"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${prog}%;"></div></div>
                     <div style="font-size:12px;color:#999;margin:5px 0;">Entregado: ${entregado}/${total} (${prog}%)</div>
                     
                     ${p.items.map(i => {
                         const prod = productos.find(pr => pr.id === i.productoId);
                         const stock = prod ? prod.stock : 0;
                         const pendiente = i.cantidad - i.entregado;
-                        const sinStockItem = stock < pendiente;
+                        const sinStock = stock < pendiente && pendiente > 0;
                         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#f8f9fa;border-radius:5px;margin:5px 0;">
                             <div>
                                 <strong>${i.nombre}</strong>
                                 <div style="font-size:12px;color:#999;">Pedido: ${i.cantidad} | Entregado: ${i.entregado}</div>
-                                ${sinStockItem && pendiente > 0 ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock: ${stock}</div>` : ''}
+                                ${sinStock ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock disponible: ${stock}</div>` : ''}
                             </div>
                             <div style="text-align:right;">
                                 <div>$${(i.precio*i.cantidad).toFixed(2)}</div>
-                                ${i.entregado >= i.cantidad ? '<span class="badge badge-success">✅</span>' : i.entregado > 0 ? '<span class="badge badge-warning">🔄</span>' : '<span class="badge badge-danger">⏳</span>'}
+                                ${i.entregado >= i.cantidad ? '<span style="color:#26de81;">✅</span>' : i.entregado > 0 ? '<span style="color:#ffa502;">🔄</span>' : '<span style="color:#999;">⏳</span>'}
                             </div>
                         </div>`;
                     }).join('')}
@@ -523,7 +498,7 @@
                                 fecha: new Date().toISOString()
                             });
                         } else {
-                            errores.push(`${i.nombre}: solo hay ${prod.stock} disponibles`);
+                            errores.push(`${i.nombre}: solo hay ${prod.stock} disponibles (necesitas ${cant})`);
                         }
                     }
                 }
@@ -582,9 +557,9 @@
             
             if (ventas.length === 0) {
                 contenedor.innerHTML = `
-                    <div class="total-box" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:25px;border-radius:20px;text-align:center;margin-bottom:20px;">
+                    <div class="total-box">
                         <div>Total Recaudado</div>
-                        <h2 style="font-size:36px;">$0.00</h2>
+                        <h2>$0.00</h2>
                         <div style="font-size:14px;opacity:0.9;">0 unidades vendidas</div>
                     </div>
                     <div class="card text-center">💰 No hay ventas registradas</div>
@@ -593,9 +568,9 @@
             }
             
             let html = `
-                <div class="total-box" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:25px;border-radius:20px;text-align:center;margin-bottom:20px;">
+                <div class="total-box">
                     <div>Total Recaudado</div>
-                    <h2 style="font-size:36px;">$${total.toFixed(2)}</h2>
+                    <h2>$${total.toFixed(2)}</h2>
                     <div style="font-size:14px;opacity:0.9;">${unidades} unidades vendidas</div>
                 </div>
                 <div class="stats-row">
@@ -610,7 +585,6 @@
                 </div>
             `;
             
-            // Agrupar por fecha
             const agrupadas = {};
             ventas.forEach(v => {
                 const f = new Date(v.fecha).toLocaleDateString();
