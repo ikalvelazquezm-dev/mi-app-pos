@@ -2,53 +2,49 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema POS</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; text-align: center; border-radius: 12px; margin-bottom: 20px; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 15px; }
+        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 15px; }
         .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; }
+        .btn { padding: 10px 15px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; }
         .btn-primary { background: #667eea; }
         .btn-success { background: #51cf66; }
         .btn-danger { background: #ff6b6b; }
         .btn-warning { background: #ffa502; }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .product { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .stock-warning { background: #fff3cd; padding: 10px; border-radius: 8px; margin: 5px 0; font-size: 13px; color: #856404; border-left: 4px solid #ffc107; }
-        .no-stock { color: #ff6b6b; font-weight: bold; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; }
+        .product { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; padding: 20px; }
         .modal.show { display: flex; align-items: center; justify-content: center; }
         .modal-content { background: white; border-radius: 20px; padding: 20px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
-        .stats-row { display: flex; gap: 10px; margin-bottom: 20px; }
-        .stat-card { flex: 1; background: white; padding: 15px; border-radius: 12px; text-align: center; }
-        .stat-number { font-size: 24px; font-weight: bold; color: #667eea; }
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab { flex: 1; padding: 12px; border: none; background: white; border-radius: 12px; cursor: pointer; font-weight: bold; text-align: center; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .tab { flex: 1; padding: 10px; border: none; background: white; border-radius: 12px; cursor: pointer; font-weight: bold; text-align: center; }
         .tab.active { background: #667eea; color: white; }
         .section { display: none; }
         .section.active { display: block; }
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: #667eea; color: white; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 4px 20px rgba(102,126,234,0.5); }
-        .status { padding: 4px 12px; border-radius: 15px; font-size: 11px; color: white; font-weight: bold; }
-        .status-Pendiente { background: #ffa502; }
-        .status-Parcial { background: #3498db; }
-        .status-Completado { background: #26de81; }
-        .status-Cancelado { background: #fc5c65; }
         .flex { display: flex; gap: 10px; }
         .flex-1 { flex: 1; }
         .text-center { text-align: center; }
         .mt-10 { margin-top: 10px; }
-        .mb-10 { margin-bottom: 10px; }
+        .status { padding: 4px 12px; border-radius: 15px; font-size: 11px; color: white; font-weight: bold; }
+        .status-Pendiente { background: #ffa502; }
+        .status-Parcial { background: #3498db; }
+        .status-Completado { background: #26de81; }
         .badge { padding: 2px 10px; border-radius: 12px; font-size: 11px; color: white; }
         .badge-success { background: #26de81; }
         .badge-warning { background: #ffa502; }
         .badge-danger { background: #ff6b6b; }
-        .total-box { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
-        .total-box h2 { font-size: 36px; }
+        .total-box { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
+        .total-box h2 { font-size: 32px; }
         .progress-bar { background: #e0e0e0; border-radius: 10px; height: 8px; margin: 8px 0; overflow: hidden; }
         .progress-fill { background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 10px; height: 100%; transition: width 0.5s; }
+        .stock-warning { background: #fff3cd; padding: 8px 12px; border-radius: 8px; margin: 5px 0; font-size: 13px; color: #856404; border-left: 4px solid #ffc107; }
+        .stats-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .stat-card { flex: 1; background: white; padding: 15px; border-radius: 12px; text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #667eea; }
     </style>
 </head>
 <body>
@@ -58,7 +54,7 @@
         <small id="fecha"></small>
     </div>
 
-    <div class="container" style="max-width: 800px; margin: 0 auto;">
+    <div style="max-width: 800px; margin: 0 auto;">
         <div class="tabs">
             <button class="tab active" onclick="cambiarTab('productos')">📦 Productos</button>
             <button class="tab" onclick="cambiarTab('pedidos')">🛒 Pedidos</button>
@@ -113,7 +109,7 @@
                 <button class="btn btn-success flex-1" onclick="agregarCarrito()">Agregar</button>
             </div>
             
-            <div class="flex" style="justify-content:space-between; font-size:18px; font-weight:bold; padding:10px; background:#f0f0f0; border-radius:8px; margin:10px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:bold; padding:10px; background:#f0f0f0; border-radius:8px; margin:10px 0;">
                 <span>Total:</span>
                 <span id="total-pedido" style="color:#667eea;">$0.00</span>
             </div>
@@ -195,7 +191,7 @@
         function mostrarProductos() {
             const contenedor = document.getElementById('lista-productos');
             if (productos.length === 0) {
-                contenedor.innerHTML = '<div class="card text-center">📦 No hay productos. Agrega uno con el botón +</div>';
+                contenedor.innerHTML = '<div class="card text-center">📦 No hay productos</div>';
                 return;
             }
             let html = `<div class="stats-row">
@@ -230,7 +226,7 @@
             actualizarSelect();
         }
 
-        // ============ PEDIDOS - SIN NINGUNA RESTRICCION DE STOCK ============
+        // ============ PEDIDOS - SIN RESTRICCIONES ============
         function abrirModalPedido() {
             carrito = [];
             document.getElementById('modal-pedido').classList.add('show');
@@ -248,7 +244,6 @@
             });
         }
 
-        // ✅ AGREGAR AL CARRITO - SIN VERIFICAR STOCK
         function agregarCarrito() {
             const id = parseInt(document.getElementById('select-producto').value);
             const cantidad = parseInt(document.getElementById('cantidad').value);
@@ -279,9 +274,9 @@
             document.getElementById('cantidad').value = 1;
             mostrarCarrito();
             
-            // ⚠️ SOLO ADVERTENCIA, NO BLOQUEA
+            // ⚠️ SOLO ADVERTENCIA
             if (producto.stock < cantidad) {
-                alert('⚠️ ADVERTENCIA: Stock insuficiente. Solo hay ' + producto.stock + ' unidades disponibles, pero igual se agregó al carrito.');
+                alert('⚠️ ADVERTENCIA: Stock insuficiente. Solo hay ' + producto.stock + ' unidades disponibles.');
             }
         }
 
@@ -301,11 +296,11 @@
                 const stock = prod ? prod.stock : 0;
                 const sinStock = stock < item.cantidad;
                 
-                html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;">
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee;">
                     <div>
                         <strong>${item.nombre}</strong>
                         <div style="font-size:12px;color:#999;">${item.cantidad} x $${item.precio.toFixed(2)}</div>
-                        ${sinStock ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock: ${stock} (insuficiente)</div>` : `<div style="font-size:11px;color:#26de81;">✅ Stock: ${stock}</div>`}
+                        ${sinStock ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock: ${stock}</div>` : `<div style="font-size:11px;color:#26de81;">✅ Stock: ${stock}</div>`}
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;">
                         <strong>$${subtotal.toFixed(2)}</strong>
@@ -334,11 +329,10 @@
                 return; 
             }
 
-            // Calcular total
             let total = 0;
             carrito.forEach(i => total += i.precio * i.cantidad);
 
-            // ✅ CREAR PEDIDO SIN NINGUNA VERIFICACION DE STOCK
+            // ✅ CREAR PEDIDO SIN VERIFICAR STOCK
             pedidos.push({
                 id: Date.now(),
                 cliente: cliente,
@@ -353,8 +347,7 @@
             
             alert('✅ Pedido creado exitosamente!\n\n' + 
                   'Cliente: ' + cliente + '\n' +
-                  'Total: $' + total.toFixed(2) + '\n' +
-                  'Productos: ' + carrito.length);
+                  'Total: $' + total.toFixed(2));
             
             cerrarModal('modal-pedido');
             carrito = [];
@@ -379,6 +372,13 @@
                 const total = p.items.reduce((s, i) => s + i.cantidad, 0);
                 const prog = total > 0 ? Math.round((entregado/total)*100) : 0;
                 
+                // Verificar si hay stock insuficiente
+                let sinStock = false;
+                p.items.forEach(i => {
+                    const prod = productos.find(pr => pr.id === i.productoId);
+                    if (prod && prod.stock < (i.cantidad - i.entregado)) sinStock = true;
+                });
+                
                 html += `<div class="card">
                     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
                         <div>
@@ -389,6 +389,8 @@
                         <span class="status status-${p.estado}">${p.estado}</span>
                     </div>
                     
+                    ${sinStock ? `<div class="stock-warning">⚠️ Stock insuficiente para completar la entrega</div>` : ''}
+                    
                     <div class="progress-bar"><div class="progress-fill" style="width:${prog}%;"></div></div>
                     <div style="font-size:12px;color:#999;margin:5px 0;">Entregado: ${entregado}/${total} (${prog}%)</div>
                     
@@ -396,12 +398,12 @@
                         const prod = productos.find(pr => pr.id === i.productoId);
                         const stock = prod ? prod.stock : 0;
                         const pendiente = i.cantidad - i.entregado;
-                        const sinStock = stock < pendiente && pendiente > 0;
+                        const sinStockItem = stock < pendiente && pendiente > 0;
                         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#f8f9fa;border-radius:5px;margin:5px 0;">
                             <div>
                                 <strong>${i.nombre}</strong>
                                 <div style="font-size:12px;color:#999;">Pedido: ${i.cantidad} | Entregado: ${i.entregado}</div>
-                                ${sinStock ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock disponible: ${stock}</div>` : ''}
+                                ${sinStockItem ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock: ${stock}</div>` : ''}
                             </div>
                             <div style="text-align:right;">
                                 <div>$${(i.precio*i.cantidad).toFixed(2)}</div>
@@ -446,16 +448,15 @@
                 }
                 const prod = productos.find(p => p.id === i.productoId);
                 const stock = prod ? prod.stock : 0;
-                const maxEntregar = Math.min(pendiente, stock);
                 
                 html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8f9fa;border-radius:8px;margin:5px 0;">
                     <div>
                         <strong>${i.nombre}</strong>
                         <div style="font-size:12px;color:#999;">Pendiente: ${pendiente} de ${i.cantidad}</div>
-                        ${stock < pendiente ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock: ${stock} (insuficiente)</div>` : `<div style="font-size:11px;color:#26de81;">✅ Stock: ${stock}</div>`}
+                        ${stock < pendiente ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock: ${stock}</div>` : `<div style="font-size:11px;color:#26de81;">✅ Stock: ${stock}</div>`}
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <input type="number" id="entrega-${i.productoId}" value="${Math.min(pendiente, Math.max(0, stock))}" min="0" max="${pendiente}" style="width:70px;padding:8px;text-align:center;border:2px solid #ddd;border-radius:8px;">
+                        <input type="number" id="entrega-${i.productoId}" value="${Math.min(pendiente, stock)}" min="0" max="${pendiente}" style="width:70px;padding:8px;text-align:center;border:2px solid #ddd;border-radius:8px;">
                         <span style="font-size:12px;">/ ${pendiente}</span>
                     </div>
                 </div>`;
