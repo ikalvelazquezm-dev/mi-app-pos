@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="POS System">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Sistema de Punto de Venta">
+    <link rel="manifest" href="/mi-app-pos/manifest.json">
+    <link rel="apple-touch-icon" href="/mi-app-pos/icon-192.png">
+    <title>Sistema POS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #f0f2f5; 
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        @supports (padding: max(0px)) {
+            body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+        }
+        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; }
+        .header h1 { font-size: 20px; }
+        .header small { opacity: 0.9; }
+        .container { padding: 20px; padding-bottom: 100px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab { flex: 1; min-width: 70px; padding: 12px 6px; border: none; background: white; border-radius: 12px; cursor: pointer; font-size: 12px; font-weight: bold; text-align: center; transition: all 0.3s; }
+        .tab:active { transform: scale(0.95); }
+        .tab.active { background: #667eea; color: white; }
+        .section { display: none; animation: fadeIn 0.3s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .product { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .product-name { font-weight: bold; font-size: 16px; }
+        .product-price { color: #667eea; font-size: 18px; font-weight: bold; }
+        .stock-btns { display: flex; align-items: center; gap: 10px; }
+        .stock-btns button { width: 36px; height: 36px; border-radius: 50%; border: none; font-size: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .stock-btns button:active { transform: scale(0.9); }
+        .btn-minus { background: #ffe0e0; color: #ff6b6b; }
+        .btn-plus { background: #d4f5d4; color: #2ecc71; }
+        .stock-num { font-size: 18px; font-weight: bold; min-width: 30px; text-align: center; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: all 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-primary { background: #667eea; }
+        .btn-danger { background: #ff6b6b; }
+        .btn-success { background: #51cf66; }
+        .btn-warning { background: #ffa502; }
+        .btn-info { background: #3498db; }
+        .btn-dark { background: #2c3e50; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-xs { padding: 4px 8px; font-size: 10px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
+        .modal.show { display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; border-radius: 20px; padding: 20px; width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; transition: border 0.3s; }
+        input:focus, select:focus, textarea:focus { border-color: #667eea; outline: none; }
+        .total-box { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 25px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
+        .total-box h2 { font-size: 36px; }
+        .status { padding: 4px 12px; border-radius: 15px; font-size: 11px; color: white; font-weight: bold; }
+        .status-Pendiente { background: #ffa502; }
+        .status-Parcial { background: #3498db; }
+        .status-Completado { background: #26de81; }
+        .status-Cancelado { background: #fc5c65; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: #667eea; color: white; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 4px 20px rgba(102,126,234,0.5); z-index: 999; transition: all 0.3s; }
+        .fab:active { transform: scale(0.9) rotate(90deg); }
+        .progress-bar { background: #e0e0e0; border-radius: 10px; height: 8px; margin: 8px 0; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 10px; height: 100%; transition: width 0.5s; }
+        .stats-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .stat-card { flex: 1; background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .stat-number { font-size: 24px; font-weight: bold; color: #667eea; }
+        .stat-label { font-size: 11px; color: #999; margin-top: 5px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .section-header h3 { font-size: 18px; }
+        .delete-btn { background: #fc5c65; color: white; border: none; padding: 8px 15px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .delete-btn:active { transform: scale(0.95); }
+        .install-banner { display: none; background: #667eea; color: white; padding: 15px; text-align: center; cursor: pointer; position: sticky; top: 0; z-index: 101; font-weight: bold; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        .empty { text-align: center; padding: 50px 20px; color: #999; }
+        .empty-icon { font-size: 50px; margin-bottom: 10px; }
+        .alert-box { background: #fff3cd; border: 1px solid #ffc107; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #856404; }
+        .stock-warning { background: #fff3cd; border: 1px solid #ffc107; padding: 8px 12px; border-radius: 8px; font-size: 12px; color: #856404; margin: 5px 0; }
+        .no-stock { color: #ff6b6b; font-size: 12px; }
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .header { padding: 15px; }
+            .header h1 { font-size: 18px; }
+            .tabs { gap: 4px; }
+            .tab { font-size: 10px; padding: 8px 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="installBanner" class="install-banner">📲 ¡Instala esta app! Toca aquí</div>
+
+    <div class="header">
+        <h1>🏪 Sistema POS</h1>
+        <small id="fecha"></small>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="cambiarTab('productos')">📦 Productos</button>
+            <button class="tab" onclick="cambiarTab('pedidos')">🛒 Activos</button>
+            <button class="tab" onclick="cambiarTab('completados')">✅ Completados</button>
+            <button class="tab" onclick="cambiarTab('ventas')">💰 Ventas</button>
+        </div>
+
+        <!-- PRODUCTOS -->
+        <div id="tab-productos" class="section active">
+            <div id="lista-productos"></div>
+        </div>
+
+        <!-- PEDIDOS ACTIVOS -->
+        <div id="tab-pedidos" class="section">
+            <div id="lista-pedidos"></div>
+        </div>
+
+        <!-- COMPLETADOS -->
+        <div id="tab-completados" class="section">
+            <div id="lista-completados"></div>
+        </div>
+
+        <!-- VENTAS -->
+        <div id="tab-ventas" class="section">
+            <div class="total-box">
+                <div>Total Recaudado</div>
+                <h2 id="total-ventas">$0.00</h2>
+                <div style="font-size:14px; opacity:0.9; margin-top:5px;" id="unidades-vendidas">0 unidades vendidas</div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-ventas-hoy">$0.00</div>
+                    <div class="stat-label">Ventas Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="cantidad-ventas">0</div>
+                    <div class="stat-label">Transacciones</div>
+                </div>
+            </div>
+            <div class="section-header">
+                <h3>📋 Historial</h3>
+                <button class="delete-btn" onclick="reiniciarVentas()">🗑️ Reiniciar Ventas</button>
+            </div>
+            <div id="lista-ventas"></div>
+        </div>
+    </div>
+
+    <button class="fab" id="fab-btn" onclick="abrirModal()">+</button>
+
+    <!-- MODAL PRODUCTO -->
+    <div id="modal-producto" class="modal">
+        <div class="modal-content">
+            <h3>Agregar Producto</h3>
+            <input type="text" id="nombre" placeholder="Nombre del producto" autocomplete="off">
+            <input type="number" id="precio" placeholder="Precio" step="0.01">
+            <input type="number" id="stock" placeholder="Stock inicial">
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn btn-warning" onclick="cerrarModalProducto()" style="flex:1;">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarProducto()" style="flex:1;">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PEDIDO -->
+    <div id="modal-pedido" class="modal">
+        <div class="modal-content">
+            <h3>Nuevo Pedido</h3>
+            <input type="text" id="cliente" placeholder="Nombre del cliente *" autocomplete="off">
+            <input type="tel" id="telefono" placeholder="Teléfono">
+            <input type="email" id="email" placeholder="Email" autocomplete="off">
+            <textarea id="notas" placeholder="Notas del pedido" rows="2"></textarea>
+            
+            <h4 style="margin-top:15px;">Productos</h4>
+            <div id="carrito" style="margin:10px 0; min-height:40px;">
+                <p style="color:#999; text-align:center;">Carrito vacío</p>
+            </div>
+            
+            <select id="select-producto">
+                <option value="">Seleccionar producto...</option>
+            </select>
+            
+            <div style="display:flex; gap:10px; margin:10px 0;">
+                <input type="number" id="cantidad" value="1" min="1" style="flex:1;">
+                <button class="btn btn-success" onclick="agregarCarrito()" style="flex:1;">Agregar</button>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:bold; margin:15px 0; padding:10px; background:#f0f0f0; border-radius:8px;">
+                <span>Total:</span>
+                <span id="total-pedido" style="color:#667eea;">$0.00</span>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-warning" onclick="cerrarModalPedido()" style="flex:1;">Cancelar</button>
+                <button class="btn btn-primary" onclick="crearPedido()" style="flex:1;">Crear Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ENTREGA -->
+    <div id="modal-entrega" class="modal">
+        <div class="modal-content">
+            <h3>📦 Registrar Entrega</h3>
+            <div id="info-pedido-entrega"></div>
+            <h4 style="margin:15px 0;">Productos a entregar:</h4>
+            <div id="items-para-entregar"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn btn-warning" onclick="cerrarModalEntrega()" style="flex:1;">Cancelar</button>
+                <button class="btn btn-success" onclick="confirmarEntrega()" style="flex:1;">✅ Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ SERVICE WORKER ============
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/mi-app-pos/sw.js')
+                    .then(reg => {
+                        console.log('✅ SW registrado correctamente');
+                    })
+                    .catch(err => {
+                        console.log('❌ Error SW:', err);
+                    });
+            });
+        }
+
+        // ============ INSTALACIÓN PWA ============
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').style.display = 'block';
+        });
+        document.getElementById('installBanner').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const result = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installBanner').style.display = 'none';
+            }
+        });
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('installBanner').style.display = 'none';
+        });
+
+        // ============ DATOS ============
+        let productos = JSON.parse(localStorage.getItem('productos') || '[]');
+        let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+        let ventas = JSON.parse(localStorage.getItem('ventas') || '[]');
+        let carrito = [];
+        let tabActual = 'productos';
+        let pedidoActualEntrega = null;
+
+        // ============ INICIALIZAR ============
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('fecha').textContent = new Date().toLocaleString();
+            setInterval(() => document.getElementById('fecha').textContent = new Date().toLocaleString(), 1000);
+            mostrarProductos();
+            mostrarPedidos();
+            mostrarCompletados();
+            mostrarVentas();
+            actualizarFab();
+        });
+
+        function cambiarTab(tab) {
+            tabActual = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            event.target.classList.add('active');
+            actualizarFab();
+            if (tab === 'productos') mostrarProductos();
+            else if (tab === 'pedidos') mostrarPedidos();
+            else if (tab === 'completados') mostrarCompletados();
+            else if (tab === 'ventas') mostrarVentas();
+        }
+
+        function actualizarFab() {
+            const fab = document.getElementById('fab-btn');
+            fab.style.display = (tabActual === 'productos' || tabActual === 'pedidos') ? 'block' : 'none';
+        }
+
+        function abrirModal() {
+            if (tabActual === 'productos') {
+                document.getElementById('modal-producto').classList.add('show');
+                document.getElementById('nombre').value = '';
+                document.getElementById('precio').value = '';
+                document.getElementById('stock').value = '';
+            } else if (tabActual === 'pedidos') {
+                carrito = [];
+                document.getElementById('modal-pedido').classList.add('show');
+                actualizarSelectProductos();
+                mostrarCarrito();
+                document.getElementById('cliente').value = '';
+                document.getElementById('telefono').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('notas').value = '';
+            }
+        }
+
+        function cerrarModalProducto() { document.getElementById('modal-producto').classList.remove('show'); }
+        function cerrarModalPedido() { document.getElementById('modal-pedido').classList.remove('show'); carrito = []; }
+        function cerrarModalEntrega() { document.getElementById('modal-entrega').classList.remove('show'); pedidoActualEntrega = null; }
+
+        // ============ PRODUCTOS ============
+        function guardarProducto() {
+            const nombre = document.getElementById('nombre').value.trim();
+            const precio = parseFloat(document.getElementById('precio').value);
+            const stock = parseInt(document.getElementById('stock').value);
+            if (!nombre || isNaN(precio) || isNaN(stock) || precio <= 0 || stock < 0) {
+                alert('Completa todos los campos correctamente');
+                return;
+            }
+            productos.push({ id: Date.now(), nombre, precio, stock });
+            localStorage.setItem('productos', JSON.stringify(productos));
+            cerrarModalProducto();
+            mostrarProductos();
+            actualizarSelectProductos();
+        }
+
+        function mostrarProductos() {
+            const contenedor = document.getElementById('lista-productos');
+            if (productos.length === 0) {
+                contenedor.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><h3>Sin productos</h3><p>Presiona + para agregar</p></div>';
+                return;
+            }
+            contenedor.innerHTML = `
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-number">${productos.length}</div><div class="stat-label">Productos</div></div>
+                    <div class="stat-card"><div class="stat-number">${productos.reduce((s, p) => s + p.stock, 0)}</div><div class="stat-label">Stock Total</div></div>
+                </div>
+                ${productos.map(p => `
+                <div class="card"><div class="product">
+                    <div><div class="product-name">${p.nombre}</div><div class="product-price">$${p.precio.toFixed(2)}</div></div>
+                    <div class="stock-btns">
+                        <button class="btn-minus" onclick="cambiarStock(${p.id}, -1)">−</button>
+                        <span class="stock-num">${p.stock}</span>
+                        <button class="btn-plus" onclick="cambiarStock(${p.id}, 1)">+</button>
+                    </div>
+                </div></div>
+                `).join('')}`;
+        }
+
+        function cambiarStock(id, cambio) {
+            const producto = productos.find(p => p.id === id);
+            if (!producto) return;
+            const nuevoStock = producto.stock + cambio;
+            if (nuevoStock < 0) { alert('Stock insuficiente'); return; }
+            producto.stock = nuevoStock;
+            localStorage.setItem('productos', JSON.stringify(productos));
+            mostrarProductos();
+            actualizarSelectProductos();
+        }
+
+        // ============ PEDIDOS (CORREGIDO - PERMITE STOCK INSUFICIENTE) ============
+        function actualizarSelectProductos() {
+            const select = document.getElementById('select-producto');
+            // Mostrar TODOS los productos (incluso con stock 0)
+            select.innerHTML = '<option value="">Seleccionar producto...</option>' +
+                productos.map(p => `<option value="${p.id}">${p.nombre} - $${p.precio} (${p.stock} disponibles)</option>`).join('');
+        }
+
+        function agregarCarrito() {
+            const id = parseInt(document.getElementById('select-producto').value);
+            const cantidad = parseInt(document.getElementById('cantidad').value);
+            if (!id || isNaN(cantidad) || cantidad < 1) { alert('Selecciona producto y cantidad'); return; }
+            const producto = productos.find(p => p.id === id);
+            if (!producto) return;
+            
+            // NO verificamos stock aquí - permitimos pedidos sin stock
+            const existente = carrito.find(i => i.productoId === id);
+            if (existente) existente.cantidad += cantidad;
+            else carrito.push({ productoId: id, nombre: producto.nombre, precio: producto.precio, cantidad, entregado: 0 });
+            
+            document.getElementById('select-producto').value = '';
+            document.getElementById('cantidad').value = 1;
+            mostrarCarrito();
+            
+            // Mostrar advertencia si no hay stock suficiente
+            const stockActual = producto.stock;
+            const totalPedido = carrito.reduce((s, i) => s + (i.productoId === id ? i.cantidad : 0), 0);
+            if (stockActual < totalPedido) {
+                alert('⚠️ ADVERTENCIA: Stock insuficiente. Solo hay ' + stockActual + ' unidades disponibles.');
+            }
+        }
+
+        function mostrarCarrito() {
+            const contenedor = document.getElementById('carrito');
+            if (carrito.length === 0) {
+                contenedor.innerHTML = '<p style="color:#999;text-align:center;">Carrito vacío</p>';
+                document.getElementById('total-pedido').textContent = '$0.00';
+                return;
+            }
+            let total = 0;
+            let html = '';
+            carrito.forEach((item, i) => {
+                const subtotal = item.precio * item.cantidad;
+                total += subtotal;
+                const producto = productos.find(p => p.id === item.productoId);
+                const stockDisponible = producto ? producto.stock : 0;
+                const sinStock = stockDisponible < item.cantidad;
+                
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee;">
+                    <div>
+                        <strong>${item.nombre}</strong>
+                        <div style="font-size:12px;color:#999;">${item.cantidad} x $${item.precio.toFixed(2)}</div>
+                        ${sinStock ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock: ${stockDisponible} (insuficiente)</div>` : `<div style="font-size:11px;color:#26de81;">✅ Stock: ${stockDisponible}</div>`}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <strong>$${subtotal.toFixed(2)}</strong>
+                        <button onclick="quitarCarrito(${i})" style="background:none;border:none;cursor:pointer;color:red;font-size:18px;">✕</button>
+                    </div>
+                </div>`;
+            });
+            contenedor.innerHTML = html;
+            document.getElementById('total-pedido').textContent = '$' + total.toFixed(2);
+        }
+
+        function quitarCarrito(index) { carrito.splice(index, 1); mostrarCarrito(); }
+
+        function crearPedido() {
+            const cliente = document.getElementById('cliente').value.trim();
+            if (!cliente) { alert('Nombre del cliente obligatorio'); return; }
+            if (carrito.length === 0) { alert('Agrega productos'); return; }
+            
+            // Verificar si hay productos sin stock suficiente
+            let sinStock = false;
+            let mensajeStock = '';
+            carrito.forEach(item => {
+                const producto = productos.find(p => p.id === item.productoId);
+                if (producto && producto.stock < item.cantidad) {
+                    sinStock = true;
+                    mensajeStock += `\n- ${item.nombre}: ${producto.stock} disponibles (pedido: ${item.cantidad})`;
+                }
+            });
+            
+            if (sinStock) {
+                if (!confirm('⚠️ ADVERTENCIA: Stock insuficiente para:\n' + mensajeStock + '\n\n¿Deseas crear el pedido de todas formas?')) {
+                    return;
+                }
+            }
+            
+            let total = 0;
+            carrito.forEach(i => total += i.precio * i.cantidad);
+            pedidos.push({
+                id: Date.now(),
+                cliente,
+                telefono: document.getElementById('telefono').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                notas: document.getElementById('notas').value.trim(),
+                items: carrito.map(i => ({...i})),
+                total,
+                estado: 'Pendiente',
+                fecha: new Date().toISOString(),
+                fechaCompletado: null
+            });
+            localStorage.setItem('pedidos', JSON.stringify(pedidos));
+            alert('✅ Pedido creado!\n' + (sinStock ? '⚠️ Recuerda reponer stock para completar la entrega.' : ''));
+            cerrarModalPedido();
+            carrito = [];
+            mostrarPedidos();
+            actualizarSelectProductos();
+        }
+
+        function mostrarPedidos() {
+            const contenedor = document.getElementById('lista-pedidos');
+            const activos = pedidos.filter(p => p.estado === 'Pendiente' || p.estado === 'Parcial');
+            if (activos.length === 0) {
+                contenedor.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><h3>Sin pedidos activos</h3></div>';
+                return;
+            }
+            contenedor.innerHTML = `<div class="stat-card" style="margin-bottom:15px;"><div class="stat-number">${activos.length}</div><div class="stat-label">Pedidos Activos</div></div>${activos.reverse().map(p => renderizarPedido(p)).join('')}`;
+        }
+
+        function mostrarCompletados() {
+            const contenedor = document.getElementById('lista-completados');
+            const completados = pedidos.filter(p => p.estado === 'Completado');
+            
+            if (completados.length === 0) {
+                contenedor.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><h3>Sin pedidos completados</h3><p>Los pedidos completados aparecerán aquí</p></div>';
+                return;
+            }
+            
+            contenedor.innerHTML = `
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-number">${completados.length}</div>
+                        <div class="stat-label">Pedidos Completados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">$${completados.reduce((s, p) => s + p.total, 0).toFixed(2)}</div>
+                        <div class="stat-label">Total Completado</div>
+                    </div>
+                </div>
+                <div class="section-header">
+                    <h3>✅ Historial de Completados</h3>
+                    <button class="delete-btn" onclick="reiniciarCompletados()">🗑️ Reiniciar Completados</button>
+                </div>
+                ${completados.reverse().map(p => `
+                <div class="card" style="border-left:4px solid #26de81;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                        <div>
+                            <strong>✅ ${p.cliente}</strong>
+                            <div style="font-size:12px;color:#999;">Creado: ${new Date(p.fecha).toLocaleDateString()}</div>
+                            <div style="font-size:12px;color:#26de81;">Completado: ${p.fechaCompletado ? new Date(p.fechaCompletado).toLocaleString() : ''}</div>
+                        </div>
+                        <span class="status status-Completado">Completado</span>
+                    </div>
+                    ${p.items.map(i => `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:1px solid #f0f0f0;"><span>${i.nombre}</span><span>${i.cantidad} x $${i.precio.toFixed(2)} = <strong>$${(i.precio*i.cantidad).toFixed(2)}</strong></span></div>`).join('')}
+                    <div style="border-top:2px solid #eee;padding-top:10px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
+                        <strong style="font-size:18px;color:#26de81;">Total: $${p.total.toFixed(2)}</strong>
+                        ${p.notas ? `<span style="font-size:11px;color:#999;">📝 ${p.notas}</span>` : ''}
+                    </div>
+                </div>
+                `).join('')}`;
+        }
+
+        function renderizarPedido(pedido) {
+            const entregado = pedido.items.reduce((s, i) => s + i.entregado, 0);
+            const total = pedido.items.reduce((s, i) => s + i.cantidad, 0);
+            const prog = total > 0 ? (entregado/total)*100 : 0;
+            
+            // Verificar stock para cada item
+            const itemsConStock = pedido.items.map(i => {
+                const producto = productos.find(p => p.id === i.productoId);
+                const stockDisponible = producto ? producto.stock : 0;
+                const pendiente = i.cantidad - i.entregado;
+                return { ...i, stockDisponible, pendiente, sinStock: stockDisponible < pendiente };
+            });
+            
+            return `<div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">
+                    <div><strong style="font-size:16px;">${pedido.cliente}</strong>${pedido.telefono?`<div style="font-size:12px;color:#999;">📞 ${pedido.telefono}</div>`:''}<div style="font-size:11px;color:#aaa;">${new Date(pedido.fecha).toLocaleString()}</div></div>
+                    <span class="status status-${pedido.estado}">${pedido.estado}</span>
+                </div>
+                ${pedido.notas?`<div style="background:#fff3cd;padding:8px;border-radius:5px;margin:10px 0;font-size:13px;">📝 ${pedido.notas}</div>`:''}
+                <div class="progress-bar"><div class="progress-fill" style="width:${prog}%;"></div></div>
+                <div style="font-size:12px;color:#999;margin:5px 0;">Entregado: ${entregado}/${total} (${Math.round(prog)}%)</div>
+                ${itemsConStock.map(i => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#f8f9fa;border-radius:5px;margin:5px 0;">
+                    <div>
+                        <strong>${i.nombre}</strong>
+                        <div style="font-size:12px;color:#999;">Pedido: ${i.cantidad} | Entregado: ${i.entregado}</div>
+                        ${i.sinStock && i.pendiente > 0 ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock disponible: ${i.stockDisponible}</div>` : ''}
+                    </div>
+                    <div style="text-align:right;">
+                        <div>$${(i.precio*i.cantidad).toFixed(2)}</div>
+                        ${i.entregado>=i.cantidad?'<span style="padding:3px 8px;border-radius:8px;font-size:11px;background:#26de81;color:white;">✅</span>':i.entregado>0?'<span style="padding:3px 8px;border-radius:8px;font-size:11px;background:#ffa502;color:white;">🔄</span>':'<span style="padding:3px 8px;border-radius:8px;font-size:11px;background:#ddd;color:#999;">⏳</span>'}
+                    </div>
+                </div>`).join('')}
+                <div style="border-top:2px solid #eee;padding-top:10px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:18px;color:#667eea;">Total: $${pedido.total.toFixed(2)}</strong>
+                    <div style="display:flex;gap:5px;">
+                        <button class="btn btn-info btn-sm" onclick="abrirEntrega(${pedido.id})">📦 Entregar</button>
+                        ${pedido.estado==='Pendiente'?`<button class="btn btn-danger btn-sm" onclick="cancelarPedido(${pedido.id})">❌</button>`:''}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function abrirEntrega(pedidoId) {
+            const pedido = pedidos.find(p => p.id === pedidoId);
+            if (!pedido) return;
+            pedidoActualEntrega = pedidoId;
+            document.getElementById('info-pedido-entrega').innerHTML = `<div style="background:#f0f0f0;padding:10px;border-radius:8px;"><strong>${pedido.cliente}</strong><div style="font-size:12px;color:#999;">${new Date(pedido.fecha).toLocaleString()}</div></div>`;
+            document.getElementById('items-para-entregar').innerHTML = pedido.items.map(i => {
+                const pendiente = i.cantidad - i.entregado;
+                const producto = productos.find(p => p.id === i.productoId);
+                const stockDisponible = producto ? producto.stock : 0;
+                const maxEntregar = Math.min(pendiente, stockDisponible);
+                
+                if (pendiente <= 0) return `<div style="display:flex;justify-content:space-between;padding:10px;background:#f8f9fa;border-radius:8px;margin:5px 0;opacity:0.5;"><div><strong>${i.nombre}</strong><div style="font-size:12px;">✅ Completado</div></div></div>`;
+                
+                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8f9fa;border-radius:8px;margin:5px 0;">
+                    <div>
+                        <strong>${i.nombre}</strong>
+                        <div style="font-size:12px;color:#999;">Pendiente: ${pendiente} de ${i.cantidad}</div>
+                        ${stockDisponible < pendiente ? `<div style="font-size:11px;color:#ff6b6b;">⚠️ Stock: ${stockDisponible} (insuficiente)</div>` : `<div style="font-size:11px;color:#26de81;">✅ Stock: ${stockDisponible}</div>`}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <input type="number" id="entrega-cant-${i.productoId}" value="${Math.min(pendiente, stockDisponible)}" min="0" max="${pendiente}" style="width:60px;padding:5px;text-align:center;">
+                        <span style="font-size:12px;">/ ${pendiente}</span>
+                    </div>
+                </div>`;
+            }).join('');
+            document.getElementById('modal-entrega').classList.add('show');
+        }
+
+        function confirmarEntrega() {
+            if (!pedidoActualEntrega) return;
+            const pedido = pedidos.find(p => p.id === pedidoActualEntrega);
+            if (!pedido) return;
+            let algo = false;
+            let faltanteStock = false;
+            
+            pedido.items.forEach(i => {
+                const pendiente = i.cantidad - i.entregado;
+                if (pendiente <= 0) return;
+                const input = document.getElementById('entrega-cant-' + i.productoId);
+                if (!input) return;
+                const cant = parseInt(input.value) || 0;
+                
+                if (cant > 0) {
+                    const prod = productos.find(p => p.id === i.productoId);
+                    if (prod) {
+                        if (prod.stock >= cant) {
+                            prod.stock -= cant;
+                        } else {
+                            faltanteStock = true;
+                            alert('⚠️ No hay suficiente stock de ' + i.nombre + '. Disponible: ' + prod.stock);
+                            return;
+                        }
+                    }
+                    i.entregado += cant;
+                    algo = true;
+                    ventas.push({ 
+                        id: Date.now()+Math.random(), 
+                        pedidoId: pedido.id, 
+                        producto: i.nombre, 
+                        cantidad: cant, 
+                        precio: i.precio, 
+                        total: i.precio*cant, 
+                        cliente: pedido.cliente, 
+                        fecha: new Date().toISOString() 
+                    });
+                }
+            });
+            
+            if (faltanteStock) return;
+            if (!algo) { alert('Entrega al menos un producto'); return; }
+            
+            const completo = pedido.items.every(i => i.entregado >= i.cantidad);
+            pedido.estado = completo ? 'Completado' : 'Parcial';
+            if (completo) pedido.fechaCompletado = new Date().toISOString();
+            
+            localStorage.setItem('productos', JSON.stringify(productos));
+            localStorage.setItem('pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('ventas', JSON.stringify(ventas));
+            cerrarModalEntrega();
+            mostrarPedidos();
+            mostrarCompletados();
+            mostrarProductos();
+            mostrarVentas();
+            alert(completo ? '✅ ¡Pedido completado!' : '✅ Entrega parcial registrada');
+        }
+
+        function cancelarPedido(id) {
+            if (!confirm('¿Cancelar pedido?')) return;
+            const pedido = pedidos.find(p => p.id === id);
+            if (pedido) {
+                pedido.items.forEach(i => {
+                    if (i.entregado > 0) {
+                        const prod = productos.find(p => p.id === i.productoId);
+                        if (prod) prod.stock += i.entregado;
+                    }
+                });
+                pedido.estado = 'Cancelado';
+                localStorage.setItem('productos', JSON.stringify(productos));
+                localStorage.setItem('pedidos', JSON.stringify(pedidos));
+                localStorage.setItem('ventas', JSON.stringify(ventas));
+                mostrarPedidos();
+                mostrarProductos();
+                mostrarVentas();
+            }
+        }
+
+        function reiniciarCompletados() {
+            const completados = pedidos.filter(p => p.estado === 'Completado');
+            
+            if (completados.length === 0) {
+                alert('No hay pedidos completados para reiniciar');
+                return;
+            }
+            
+            const mensaje = `⚠️ ¿Estás seguro de ELIMINAR todos los pedidos completados?\n\nSe eliminarán ${completados.length} pedidos completados.\n\nTotal: $${completados.reduce((s, p) => s + p.total, 0).toFixed(2)}\n\n⚠️ Las ventas registradas NO se borrarán.\n⚠️ Esta acción NO se puede deshacer.`;
+            
+            if (!confirm(mensaje)) return;
+            if (!confirm('❗ ÚLTIMA ADVERTENCIA: ¿Confirmas eliminar todos los pedidos completados?')) return;
+            
+            pedidos = pedidos.filter(p => p.estado !== 'Completado');
+            localStorage.setItem('pedidos', JSON.stringify(pedidos));
+            
+            mostrarCompletados();
+            alert('✅ Pedidos completados eliminados exitosamente\n\nLas ventas registradas se conservan.');
+        }
+
+        function mostrarVentas() {
+            const totalVentas = ventas.reduce((s, v) => s + v.total, 0);
+            const totalUnidades = ventas.reduce((s, v) => s + v.cantidad, 0);
+            document.getElementById('total-ventas').textContent = '$' + totalVentas.toFixed(2);
+            document.getElementById('unidades-vendidas').textContent = totalUnidades + ' unidades vendidas';
+            const hoy = new Date().toLocaleDateString();
+            const ventasHoy = ventas.filter(v => new Date(v.fecha).toLocaleDateString() === hoy);
+            document.getElementById('total-ventas-hoy').textContent = '$' + ventasHoy.reduce((s, v) => s + v.total, 0).toFixed(2);
+            document.getElementById('cantidad-ventas').textContent = ventas.length;
+            const contenedor = document.getElementById('lista-ventas');
+            if (ventas.length === 0) {
+                contenedor.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><h3>Sin ventas</h3><p>Las ventas aparecerán cuando entregues productos</p></div>';
+                return;
+            }
+            const agrupadas = {};
+            ventas.forEach(v => {
+                const f = new Date(v.fecha).toLocaleDateString();
+                if (!agrupadas[f]) agrupadas[f] = { ventas: [], total: 0, unidades: 0 };
+                agrupadas[f].ventas.push(v);
+                agrupadas[f].total += v.total;
+                agrupadas[f].unidades += v.cantidad;
+            });
+            contenedor.innerHTML = Object.entries(agrupadas).reverse().map(([f, g]) => `
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                        <div><strong>📅 ${f}</strong><div style="font-size:12px;color:#999;">${g.ventas.length} trans. | ${g.unidades} unids.</div></div>
+                        <strong style="color:#26de81;font-size:18px;">$${g.total.toFixed(2)}</strong>
+                    </div>
+                    ${g.ventas.reverse().map(v => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:14px;"><div><strong>${v.producto}</strong><div style="font-size:11px;color:#999;">${v.cliente} | ${new Date(v.fecha).toLocaleTimeString()}</div></div><div style="text-align:right;"><div>${v.cantidad} x $${v.precio.toFixed(2)}</div><strong style="color:#26de81;">$${v.total.toFixed(2)}</strong></div></div>`).join('')}
+                </div>
+            `).join('');
+        }
+
+        function reiniciarVentas() {
+            if (ventas.length === 0) { alert('No hay ventas para reiniciar'); return; }
+            const mensaje = `⚠️ ¿Reiniciar TODAS las ventas?\n\nTotal actual: $${ventas.reduce((s, v) => s + v.total, 0).toFixed(2)}\n${ventas.reduce((s, v) => s + v.cantidad, 0)} unidades vendidas\n\n⚠️ Esta acción NO se puede deshacer.`;
+            if (!confirm(mensaje)) return;
+            if (!confirm('❗ ¿Estás COMPLETAMENTE seguro?')) return;
+            ventas = [];
+            localStorage.setItem('ventas', JSON.stringify(ventas));
+            mostrarVentas();
+            alert('✅ Historial de ventas reiniciado exitosamente');
+        }
+    </script>
+</body>
+</html>
